@@ -1,6 +1,6 @@
 # 📊 Limechat Database Schema Documentation
 
-> **Generated:** 2025-12-09 at 11:58:48
+> **Generated:** 2025-12-09 at 11:55:36
 > **Total Tables:** 1
 
 ## 📑 Table of Contents
@@ -13,62 +13,52 @@
 
 > **Model:** `Account`
 
-### 📝 Table Description
-
-## Accounts Table
-
-**Primary entity representing customer organizations/tenants in the multi-tenant helpdesk system.** Each account corresponds to a company using the platform and contains configuration settings including assignment logic, currency preferences, feature flags, contact masking options, and UI customization (e.g., hiding specific tabs for agents/supervisors). 
-
-The account serves as the top-level parent entity with 74 relationships cascading down to conversations, users (agents), contacts (customers), inboxes, and other core system resources. Key use cases include tenant isolation, billing management (via `billing_email` and `currency`), feature enablement through `feature_flags`, enterprise tier identification (`is_enterprise`), and workspace-level settings like auto-resolve duration and tag enforcement.
-
-**Note:** Supports soft deletion via `deleted_at` timestamp.
-
 ### 📋 Columns
 
-| Column | Type | Length | Nullable | Default | Enum Values | Validations | Constraints | Description |
-|--------|------|--------|----------|---------|-------------|-------------|-------------|-------------|
-| **id** 🔑 | `integer` | - | ✗ | - | - | - | NOT NULL, PRIMARY KEY | **Primary Key** - ID is a sequentially increasing integer that uniquely identifies each account record and serves as the PRIMARY KEY of the accounts table. |
-| assignment_logic | `integer` | - | ✗ | `load_balanced` | round_robin(0), load_balanced(1) | - | NOT NULL | assignment_logic **Description:** Determines the algorithm used to distribute incoming conversations to available agents within the account. Values include `round_robin` (sequential distribution to agents in order) and `load_balanced` (default; distributes based on current agent workload to optim... |
-| auto_resolve_duration | `integer` | - | ✓ | - | - | numericality | - | auto_resolve_duration **Description:** Specifies the time duration (in days) after which inactive conversations in this account will be automatically resolved. When set, conversations remain open for this number of days before being automatically closed; if null, auto-resolution is disabled for t... |
-| billing_email | `string` | - | ✓ | - | - | - | - | **billing_email** Email address designated for receiving billing-related communications and invoices for the account. This field is optional and may differ from the primary account contact email, allowing separate routing of financial correspondence. |
-| contact_masking | `boolean` | - | ✓ | `FALSE` | - | - | - | contact_masking **Boolean flag indicating whether contact (customer) personal information should be masked or hidden for privacy/security purposes.** When enabled (TRUE), the customer's sensitive contact details are obfuscated in the system interface and reports; defaults to FALSE allowing full c... |
-| currency | `text` | - | ✓ | `INR` | - | - | - | Currency **Type:** text \| **Nullable:** Yes \| **Default:** INR **Description:** Specifies the currency code for the account's financial transactions and balances. Defaults to INR (Indian Rupee) when not explicitly set, and can be null for accounts where currency context is not applicable. |
-| deleted_at | `datetime` | - | ✓ | - | - | - | - | deleted_at **Type:** datetime \| **Nullable:** True **Description:** UTC timestamp indicating when the account was soft-deleted. When NULL, the account is active; when populated, the account is marked as deleted and typically excluded from standard queries (soft delete pattern). |
-| domain | `string` | 100 | ✓ | - | - | - | - | **domain** (string, 100, nullable) The domain name or web address associated with the account, typically representing the organization's primary website or branded subdomain where the helpdesk/dashboard service is deployed. This field is optional and may be used to identify and differentiate mult... |
-| enforce_tagging | `boolean` | - | ✓ | `FALSE` | - | - | - | enforce_tagging **Description:** Determines whether tagging of conversations is mandatory for agents within the account. When enabled (TRUE), agents must apply relevant tags before closing or completing conversations; when disabled (FALSE, default), tagging remains optional. **Type:** Boolean \| ... |
-| feature_flags | `integer` | - | ✗ | `0` | - | - | NOT NULL | feature_flags **Description:** A bitmask integer field used to enable or disable specific account-level features through binary flags. Each bit position represents a distinct feature toggle, allowing multiple features to be stored efficiently in a single column (e.g., bit 0 for feature A, bit 1 f... |
-| grace_added_on | `datetime` | - | ✓ | - | - | - | - | grace_added_on **Description:** Records the UTC timestamp when a grace period was granted to the account. This nullable field tracks when temporary extension privileges were applied, typically used for billing or service continuity purposes. **Data Type:** datetime (UTC) **Nullable:** Yes |
-| grace_extension | `boolean` | - | ✓ | `FALSE` | - | - | - | **grace_extension** `boolean` \| Nullable \| Default: `FALSE` Indicates whether the account has been granted a grace period extension, typically allowing continued access or functionality beyond the standard expiration date. When set to TRUE, the account receives temporary reprieve from suspensio... |
-| hide_all_tab | `boolean` | - | ✓ | `FALSE` | - | - | - | hide_all_tab **Type:** boolean \| **Nullable:** Yes \| **Default:** FALSE **Description:** Controls the visibility of the "All" tab in the account's interface. When set to TRUE, the "All" tab is hidden from view for users associated with this account, allowing administrators to customize the navi... |
-| hide_all_tab_for_supervisor | `boolean` | - | ✓ | `FALSE` | - | - | - | hide_all_tab_for_supervisor **Description:** Controls visibility of the "All" tab for users with supervisor role. When set to TRUE, supervisors will not see the "All" conversations/tickets tab in their dashboard view, limiting their view to only assigned or team-specific items. **Data Format:** B... |
-| hide_bot_conversations | `boolean` | - | ✓ | `FALSE` | - | - | - | **hide_bot_conversations** Boolean flag that controls the visibility of bot-handled conversations in the account's interface. When set to TRUE, conversations where only the bot was involved (no agent interaction) are filtered from the conversation views, helping agents focus on human-assisted int... |
-| hide_out_of_stock | `boolean` | - | ✓ | `FALSE` | - | - | - | hide_out_of_stock **Type:** boolean \| **Nullable:** Yes \| **Default:** FALSE **Description:** Controls whether out-of-stock products are hidden from display for this account. When set to TRUE, products with zero inventory will be automatically filtered from the account's product catalog or stor... |
-| hide_queued_tab | `boolean` | - | ✓ | `FALSE` | - | - | - | hide_queued_tab **Type:** boolean \| **Nullable:** True \| **Default:** FALSE **Description:** Controls the visibility of the queued conversations tab in the agent dashboard. When set to TRUE, the queued tab is hidden from the account's interface, allowing accounts to customize their conversation... |
-| hide_queued_tab_for_supervisor | `boolean` | - | ✓ | `FALSE` | - | - | - | hide_queued_tab_for_supervisor **Type:** boolean \| **Nullable:** Yes \| **Default:** FALSE **Description:** Controls visibility of the queued conversations tab for supervisor-level users. When set to TRUE, supervisors will not see the queued tab in their dashboard interface, allowing account-lev... |
-| is_enterprise | `boolean` | - | ✓ | `FALSE` | - | - | - | is_enterprise **Description:** Indicates whether the account is classified as an enterprise-tier account. This boolean flag (defaulting to FALSE) is used to differentiate enterprise customers from standard accounts, typically affecting feature access, billing tier, and service level agreements. *... |
-| locale | `integer` | - | ✓ | `en` | see enum details | - | - | locale **Type:** integer \| **Nullable:** Yes \| **Default:** en **Description:** Stores the preferred language setting for the account using ISO 639-1 language codes (mapped as integers via LANGUAGES_CONFIG). Determines the localization and language preferences for the account's interface and co... |
-| name | `string` | - | ✗ | - | - | required | NOT NULL | **name** `string` · Required The account name identifier that uniquely represents the organization or workspace. This is a mandatory field used throughout the system to reference and display the account across all 74 relationship connections. |
-| on_grace_period | `boolean` | - | ✓ | `FALSE` | - | - | - | on_grace_period **Description:** Indicates whether the account is currently in a grace period, typically after a subscription or payment issue, allowing continued access to services before enforcement of restrictions. Defaults to FALSE when not explicitly set. **Business Context:** Used to manage... |
-| on_shopify_custom_plan | `boolean` | - | ✓ | `FALSE` | - | - | - | on_shopify_custom_plan **Description:** Indicates whether the account is subscribed to a custom Shopify pricing plan rather than a standard tier. Defaults to FALSE; when TRUE, signifies the account has negotiated custom terms or enterprise-level pricing with Shopify. |
-| partner_billed | `boolean` | - | ✗ | `FALSE` | - | - | NOT NULL | partner_billed **Description:** Boolean flag indicating whether the account has been billed through a partner/reseller arrangement. When TRUE, denotes that billing is handled by a partner entity rather than directly; defaults to FALSE for standard direct billing accounts. |
-| password | `string` | - | ✓ | - | - | - | - | **password** (string, nullable) Stores the encrypted/hashed password credential for agent authentication. This field may be null for accounts using alternative authentication methods (e.g., SSO, OAuth) or for system-generated service accounts that don't require password-based login. |
-| payment_pending | `boolean` | - | ✓ | `FALSE` | - | - | - | payment_pending **Description:** Indicates whether the account has an outstanding payment that is awaiting processing or completion. Defaults to FALSE, meaning no pending payments unless explicitly set otherwise. |
-| preferred_billing_currency | `integer` | - | ✓ | `USD` | INR(0), USD(1) | - | - | preferred_billing_currency **Type:** integer \| **Nullable:** True \| **Default:** USD **Description:** Specifies the account's preferred currency for billing and invoicing purposes. Accepts enumerated values: INR (Indian Rupee) or USD (US Dollar), with USD as the default currency when not explic... |
-| settings_flags | `integer` | - | ✗ | `0` | - | - | NOT NULL | **settings_flags** `integer` \| NOT NULL \| Default: 0 Stores account-level configuration preferences as bitwise flags, where each bit position represents a specific setting toggle (e.g., feature enablement, notification preferences, or access controls). The integer value is a bitmask that allows... |
-| shopify_access_token | `string` | - | ✓ | - | - | - | - | **shopify_access_token** OAuth access token used to authenticate and authorize API requests to the Shopify store associated with this account. This token enables the system to perform operations on behalf of the merchant, such as syncing orders, products, and customer data from their Shopify store. |
-| shopify_app_reinstalled | `boolean` | - | ✓ | `FALSE` | - | - | - | shopify_app_reinstalled **Type:** boolean \| **Nullable:** Yes \| **Default:** FALSE **Description:** Indicates whether the Shopify app has been reinstalled for this account. This flag is set to TRUE when an account that previously uninstalled the Shopify integration reinstalls it, helping track ... |
-| shopify_country_code | `string` | - | ✓ | - | - | - | - | shopify_country_code **Description:** Stores the two-letter ISO country code associated with the Shopify account, indicating the primary geographic location or market where the account operates. This field is nullable and may be empty for accounts not integrated with Shopify or where country info... |
-| shopify_country_name | `string` | - | ✓ | - | - | - | - | shopify_country_name **Description:** The country name associated with the account's Shopify store location or primary business address. This field is nullable and stores the full country name in string format, typically used for geographical segmentation and regional analytics. |
-| shopify_deleted | `boolean` | - | ✓ | `FALSE` | - | - | - | shopify_deleted **Description:** A boolean flag indicating whether the account has been deleted from Shopify. When set to TRUE, it marks that the corresponding Shopify account is no longer active or has been removed from the Shopify platform. **Default Value:** FALSE (account is active by default) |
-| shopify_store_url | `string` | - | ✓ | - | - | - | - | The Shopify store URL associated with the account, used to identify and link the account to a specific Shopify merchant store. This field is optional and should contain the full store URL (e.g., "https://storename.myshopify.com") when the account is integrated with Shopify. |
-| source | `string` | - | ✓ | - | - | - | - | source Indicates the originating channel or platform through which the account was created or acquired (e.g., web signup, mobile app, API integration, referral). This nullable field helps track account acquisition channels for analytics and attribution purposes. |
-| support_email | `string` | 100 | ✓ | - | - | - | - | support_email **Description:** Email address designated for customer support inquiries associated with the account. This optional field (nullable) can store up to 100 characters and serves as the primary contact point for support-related communications. **Business Context:** Used to route support... |
-| template_last_synced_at | `datetime` | - | ✓ | - | - | - | - | template_last_synced_at **Description:** UTC timestamp indicating when the account's templates were last synchronized. This field remains NULL until the first template sync operation is performed for the account. **Data Type:** datetime \| **Nullable:** Yes |
-| username | `string` | - | ✓ | - | - | - | - | **username** (string, nullable): The login identifier for an agent account in the system. This field may be null for accounts that are not yet fully provisioned or for system-generated entries. |
-| website_url | `string` | - | ✓ | - | - | - | - | **website_url** `string \| nullable` Stores the URL of the account's website (e.g., company website or business homepage). This field is optional and helps identify the organization associated with the account. |
-| created_at | `datetime` | - | ✗ | - | - | - | NOT NULL | created_at **Description:** UTC timestamp indicating when the account record was created in the system. This field is automatically populated upon account creation and cannot be null, serving as an immutable audit trail for account inception. |
-| updated_at | `datetime` | - | ✗ | - | - | - | NOT NULL | updated_at **Description:** UTC timestamp indicating when the account record was last modified. This field is automatically updated whenever any changes are made to the account entry, providing an audit trail for data modifications. **Technical Details:** - Type: datetime (UTC) - Nullable: False ... |
-| customer_id | `string` | - | ✓ | - | - | - | - | **customer_id** Uniquely identifies the customer (contact) associated with this account. References the customer/contact record and serves as a foreign key to link account information with the corresponding customer data across the system. |
+| Column | Type | Length | Nullable | Default | Enum Values | Validations | Constraints |
+|--------|------|--------|----------|---------|-------------|-------------|-------------|
+| **id** 🔑 | `integer` | - | ✗ | - | - | - | NOT NULL, PRIMARY KEY |
+| assignment_logic | `integer` | - | ✗ | `load_balanced` | round_robin(0), load_balanced(1) | - | NOT NULL |
+| auto_resolve_duration | `integer` | - | ✓ | - | - | numericality | - |
+| billing_email | `string` | - | ✓ | - | - | - | - |
+| contact_masking | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| currency | `text` | - | ✓ | `INR` | - | - | - |
+| deleted_at | `datetime` | - | ✓ | - | - | - | - |
+| domain | `string` | 100 | ✓ | - | - | - | - |
+| enforce_tagging | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| feature_flags | `integer` | - | ✗ | `0` | - | - | NOT NULL |
+| grace_added_on | `datetime` | - | ✓ | - | - | - | - |
+| grace_extension | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| hide_all_tab | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| hide_all_tab_for_supervisor | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| hide_bot_conversations | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| hide_out_of_stock | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| hide_queued_tab | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| hide_queued_tab_for_supervisor | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| is_enterprise | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| locale | `integer` | - | ✓ | `en` | see enum details | - | - |
+| name | `string` | - | ✗ | - | - | required | NOT NULL |
+| on_grace_period | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| on_shopify_custom_plan | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| partner_billed | `boolean` | - | ✗ | `FALSE` | - | - | NOT NULL |
+| password | `string` | - | ✓ | - | - | - | - |
+| payment_pending | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| preferred_billing_currency | `integer` | - | ✓ | `USD` | INR(0), USD(1) | - | - |
+| settings_flags | `integer` | - | ✗ | `0` | - | - | NOT NULL |
+| shopify_access_token | `string` | - | ✓ | - | - | - | - |
+| shopify_app_reinstalled | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| shopify_country_code | `string` | - | ✓ | - | - | - | - |
+| shopify_country_name | `string` | - | ✓ | - | - | - | - |
+| shopify_deleted | `boolean` | - | ✓ | `FALSE` | - | - | - |
+| shopify_store_url | `string` | - | ✓ | - | - | - | - |
+| source | `string` | - | ✓ | - | - | - | - |
+| support_email | `string` | 100 | ✓ | - | - | - | - |
+| template_last_synced_at | `datetime` | - | ✓ | - | - | - | - |
+| username | `string` | - | ✓ | - | - | - | - |
+| website_url | `string` | - | ✓ | - | - | - | - |
+| created_at | `datetime` | - | ✗ | - | - | - | NOT NULL |
+| updated_at | `datetime` | - | ✗ | - | - | - | NOT NULL |
+| customer_id | `string` | - | ✓ | - | - | - | - |
 
 #### 🏷️ Enum Details
 
